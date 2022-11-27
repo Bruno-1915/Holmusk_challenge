@@ -18,9 +18,16 @@ def classify_diabetes(df):
     index = df.columns.to_list().index('value_glucose')
     # [Diabetes.normal if i < 7.8 else Diabetes.prediabetes if i < 11.1 else Diabetes.diabetes]
     df.insert(loc=index, column = 'Diabetes', 
-            value = [Diabetes_level.normal if i < 7.8 else Diabetes_level.prediabetes if i < 11.1 else Diabetes_level.diabetes
+            value = [Diabetes_level.normal if i < 7.8 
+                    else Diabetes_level.prediabetes if i < 11.1
+                    else Diabetes_level.diabetes
                     for i in df['value_glucose']])
-    df = df.iloc[:,:index].join(pd.get_dummies(df.Diabetes, prefix='Diab')).join(df.iloc[:,index:])
+    one_hot = pd.get_dummies(df.Diabetes, prefix='Diab_level', )
+    for i in Diabetes_level.levels:
+        if i not in one_hot.columns:
+            one_hot[f'Diab_level_{i}'] = [0 for i in range(len(one_hot))]
+    one_hot = one_hot[[f'Diab_level_{i}' for i in Diabetes_level.levels]]
+    df = df.iloc[:,:index].join(one_hot).join(df.iloc[:,index:])
     df.drop(columns=['Diabetes'], inplace=True)
     return df
 
@@ -34,7 +41,12 @@ def classify_gfr(df):
                     else GFR_level.g2 if i < 90
                     else GFR_level.g1
                     for i in df['GFR']])
-    df = df.iloc[:,:index].join(pd.get_dummies(df.GFR_level, prefix='GFR_level')).join(df.iloc[:,index:])
+    one_hot = pd.get_dummies(df.GFR_level, prefix='GFR_level', )
+    for i in GFR_level.levels:
+        if i not in one_hot.columns:
+            one_hot[f'GFR_level_{i}'] = [0 for i in range(len(one_hot))]
+    one_hot = one_hot[[f'GFR_level_{i}' for i in GFR_level.levels]]
+    df = df.iloc[:,:index].join(one_hot).join(df.iloc[:,index:])
     df.drop(columns=['GFR_level'], inplace=True)
     return df
 
